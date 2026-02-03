@@ -1,0 +1,80 @@
+// Customized GPCH Acquisition channels. 
+
+// Define variables
+LET(
+  search, ["google", "bing", "yahoo", "ecosia", "duckduckgo", "brave"],
+LET ( 
+  // UTM Medium for ads
+  ad_medium, ["paid", "banner", "ppc", "cpc", "ad", "display"],
+LET(
+  // See Mixpanel Lookup Tables documentation. Terms used for "UTM Source (cleaned)"
+  social_source, ["Facebook", "Instagram", "LinkedIn", "Twitter", "Youtube", "Pinterest", "Meta", "Bluesky"],
+LET (
+  // Domain parts of social websites to look for in referrers
+  social_domain, ["facebook", "linkedin", "youtube", "linkedin"],
+  
+LET (
+  // AI sources
+  ai_source, ["chatgpt.com", "perplexity", "copilot.com", "openai"],
+  
+LET (
+  // AI service domains
+  ai_domain, ["chatgpt", "gemini", "copilot"],
+
+IFS(
+  // Email
+  @"""{"label":"UTM Medium","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_medium"}"""@= "email", "Email",
+  
+  // Website Social Shares
+  @"""{"label":"UTM Campaign","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_campaign"}"""@= "GreenpeaceWebsite", "Share Buttons",
+
+  // Paid Social
+  @"""{"label":"UTM Medium","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_medium"}"""@ IN ad_medium AND @"""{"dataGroupId":"1795839498532964921","joinPropertyType":"string","label":"UTM Source","propertyDefaultType":"string","resourceType":"event","type":"string","value":["utm_source","UTM Source (Cleaned)"]}"""@IN social_source,
+  "Paid Social",
+  
+  // Additional Paid Social that are not correctly tagged
+  @"""{"joinPropertyType":"string","label":"UTM Source","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_source"}"""@ IN ["paid"] AND @"""{"label":"UTM Medium","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_medium"}"""@IN ["Instagram_Feed", "Instagram_Stories", "Instagram_Explore", "Instagram_Reels"],
+  "Paid Social",
+
+  // Paid Search
+  (@"""{"label":"UTM Source","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_source"}"""@IN search OR @"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@IN search OR PARSE_URL(@"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@, "domain") IN search)
+  AND @"""{"label":"UTM Medium","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_medium"}"""@IN ad_medium,
+  "Paid Search",
+  
+  // Paid Other
+  @"""{"label":"UTM Medium","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_medium"}"""@ IN ad_medium,
+  "Paid Other",
+
+  // Organic Social
+  (@"""{"dataGroupId":"1795839498532964921","joinPropertyType":"string","label":"UTM Source (Cleaned)","propertyDefaultType":"string","resourceType":"event","type":"string","value":["utm_source","UTM Source (Cleaned)"]}"""@IN social_source  OR @"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@IN social_domain OR PARSE_URL(@"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@, "domain") IN social_domain),
+  "Organic Social",
+  
+  // Organic Search
+  (@"""{"label":"UTM Source","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_source"}"""@IN search OR @"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@IN search OR PARSE_URL(@"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@, "domain") IN search),
+  "Organic Search",
+  
+  // AI Organic
+  (@"""{"label":"UTM Source","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_source"}"""@IN ai_source OR @"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@IN ai_domain OR PARSE_URL(@"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@, "domain") IN ai_domain),
+  "AI Organic",
+  
+  // P2P Share
+  @"""{"label":"UTM Medium","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_medium"}"""@ = "p2p", "P2P Share",
+  
+  // Influencer
+  @"""{"label":"UTM Medium","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_medium"}"""@ = "influencer", "Influencer",
+  
+  // Partner
+  @"""{"label":"UTM Medium","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_medium"}"""@ = "partner", "Partner",
+  
+  // Print
+  @"""{"label":"UTM Medium","propertyDefaultType":"string","resourceType":"event","type":"string","value":"utm_medium"}"""@= "print", "Print",
+
+  // Excluding your own website's domain so it doesn't get counted as "Referral".
+  @"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@ in @"""{"label":"Current URL","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$current_url"}"""@, UNDEFINED,
+
+  // Defining "Referral".
+  NOT @"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@="" AND DEFINED(@"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@),"Referral",
+
+  // Defining "Direct". If there is no tracked UTM Source, UTM Medium or Referring Domain, channel is deemed "Direct"
+  TRUE, "Direct"
+)))))))
