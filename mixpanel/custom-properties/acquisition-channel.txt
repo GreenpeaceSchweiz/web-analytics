@@ -74,6 +74,11 @@ IFS(
 
   // Defining "Referral".
   NOT @"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@="" AND DEFINED(@"""{"label":"Referring Domain","propertyDefaultType":"string","resourceType":"event","type":"string","value":"$referring_domain"}"""@),"Referral",
+  
+  // Bot
+  // Tries to remove some of the bots from the "direct" category
+  (@"""{"label":"User Agent","propertyDefaultType":"string","resourceType":"event","type":"string","value":"user_agent"}"""@= "Mozilla/5.0 (Linux; Android 7.0;) AppleWebKit/537.36 (KHTML, like Gecko) Mobile Safari/537.36 (compatible; PetalBot;+https://webmaster.petalsearch.com/site/petalbot)") OR (@"""{"label":"Country","propertyDefaultType":"string","resourceType":"event","type":"string","value":"mp_country_code"}"""@= "Hong Kong" AND @"""{"label":"User Agent","propertyDefaultType":"string","resourceType":"event","type":"string","value":"user_agent"}"""@ = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.6943.141 Safari/537.36") OR (@"""{"label":"User Agent","propertyDefaultType":"string","resourceType":"event","type":"string","value":"user_agent"}"""@ = "AdsBot-Google (+http://www.google.com/adsbot.html)"), 
+  "Bot",
 
   // Defining "Direct". If there is no tracked UTM Source, UTM Medium or Referring Domain, channel is deemed "Direct"
   TRUE, "Direct"
