@@ -1,0 +1,7 @@
+// Device type depending on screen width
+
+IFS(
+  @"""{"label":"Screen Width","propertyDefaultType":"number","resourceType":"event","type":"number","value":"$screen_width"}"""@ < 481, "Mobile",
+  @"""{"label":"Screen Width","propertyDefaultType":"number","resourceType":"event","type":"number","value":"$screen_width"}"""@ < 1025, "Tablet",
+  @"""{"label":"Screen Width","propertyDefaultType":"number","resourceType":"event","type":"number","value":"$screen_width"}"""@ > 1024, "Desktop"
+)
